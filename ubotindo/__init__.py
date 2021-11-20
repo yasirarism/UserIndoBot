@@ -52,7 +52,7 @@ if CONFIG_CHECK:
     )
     sys.exit(1)
 
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("BOT_TOKEN")
 OWNER_ID = int(os.environ.get("OWNER_ID") or 0)
 MESSAGE_DUMP = os.environ.get("MESSAGE_DUMP") or None
 GBAN_LOGS = os.environ.get("GBAN_LOGS") or None
