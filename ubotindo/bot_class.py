@@ -26,9 +26,7 @@ from pyrogram.raw.all import layer
 from ubotindo import (
     API_HASH,
     APP_ID,
-    BOT_TOKEN,
-    LOG_DATETIME,
-    LOGFILE,
+    TOKEN,
     LOGGER,
     MESSAGE_DUMP,
     NO_LOAD,
@@ -59,8 +57,8 @@ class YasirBot(Client):
 
         super().__init__(
             "YasirBot",
-            bot_token=BOT_TOKEN,
-            plugins=dict(root=f"bot.plugins", exclude=NO_LOAD),
+            bot_token=TOKEN,
+            plugins=dict(root=f"ubotindo.plugins", exclude=NO_LOAD),
             api_id=APP_ID,
             api_hash=API_HASH,
             workers=WORKERS,
@@ -72,8 +70,6 @@ class YasirBot(Client):
 
         meh = await get_self(self)  # Get bot info from pyrogram client
         LOGGER.info("Starting bot...")
-
-        startmsg = await self.send_message(MESSAGE_DUMP, "<i>Starting Bot...</i>")
 
         # Load Languages
         lang_status = len(lang_dict) >= 1
@@ -89,44 +85,12 @@ class YasirBot(Client):
         cmd_list = await load_cmds(await all_plugins())
 
         LOGGER.info(f"Plugins Loaded: {cmd_list}")
-
-        # Send a message to MESSAGE_DUMP telling that the
-        # bot has started and has loaded all plugins!
-        await startmsg.edit_text(
-            (
-                f"<b><i>@{meh.username} started on Pyrogram v{__version__} (Layer - {layer})</i></b>\n"
-                f"\n<b>Python:</b> <u>{python_version()}</u>\n"
-                "\n<b>Loaded Plugins:</b>\n"
-                f"<i>{cmd_list}</i>\n"
-            ),
-        )
-
         LOGGER.info("Bot Started Successfully!\n")
 
     async def stop(self):
-        """Stop the bot and send a message to MESSAGE_DUMP telling that the bot has stopped."""
-        runtime = strftime("%Hh %Mm %Ss", gmtime(time() - UPTIME))
-        LOGGER.info("Uploading logs before stopping...!\n")
-        # Send Logs to MESSAGE_DUMP and LOG_CHANNEL
-        await self.send_document(
-            MESSAGE_DUMP,
-            document=LOGFILE,
-            caption=(
-                "Bot Stopped!\n\n" f"Uptime: {runtime}\n" f"<code>{LOG_DATETIME}</code>"
-            ),
-        )
-        if MESSAGE_DUMP:
-            # LOG_CHANNEL is not necessary
-            await self.send_document(
-                MESSAGE_DUMP,
-                document=LOGFILE,
-                caption=f"Uptime: {runtime}",
-            )
         await super().stop()
         MongoDB.close()
         LOGGER.info(
             f"""Bot Stopped.
-            Logs have been uploaded to the MESSAGE_DUMP Group!
-            Runtime: {runtime}s\n
         """,
         )
