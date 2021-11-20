@@ -195,7 +195,7 @@ When marked as AFK, any mentions will be replied to with a message to say you're
 """
 
 
-AFK_HANDLER = DisableAbleCommandHandler("afk", afk, run_async=True)
+AFK_HANDLER = DisableAbleCommandHandler("pergi", afk, run_async=True)
 AFK_REGEX_HANDLER = DisableAbleMessageHandler(
     Filters.regex("(?i)brb"), afk, friendly="afk", run_async=True
 )
