@@ -51,8 +51,16 @@ if CONFIG_CHECK:
         "Please remove the line mentioned in the first hashtag from the config.env file"
     )
     sys.exit(1)
+    
+LOGGER.info("------------------------")
+LOGGER.info("|      YasirBot    |")
+LOGGER.info("------------------------")
+LOGGER.info(f"Version: -")
+LOGGER.info(f"Owner: @YasirArisM")
 
 TOKEN = os.environ.get("BOT_TOKEN")
+API_ID = os.environ.get("API_ID") or None
+API_HASH = os.environ.get("MESSAGE_DUMP") or None
 OWNER_ID = int(os.environ.get("OWNER_ID") or 0)
 MESSAGE_DUMP = os.environ.get("MESSAGE_DUMP") or None
 GBAN_LOGS = os.environ.get("GBAN_LOGS") or None
@@ -130,3 +138,12 @@ from ubotindo.modules.helper_funcs.handlers import (
 
 if CUSTOM_CMD and len(CUSTOM_CMD) >= 1:
     tg.CommandHandler = CustomCommandHandler
+
+async def get_self(c):
+    """Gets the information about bot."""
+    global BOT_USERNAME, BOT_NAME, BOT_ID
+    getbot = await c.get_me()
+    BOT_NAME = getbot.first_name
+    BOT_USERNAME = getbot.username
+    BOT_ID = getbot.id
+    return getbot
