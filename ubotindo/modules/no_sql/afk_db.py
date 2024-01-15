@@ -27,8 +27,7 @@ def is_afk(user_id) -> bool:
 
 
 def check_afk_status(user_id) -> dict:
-    data = AFK_USERS.find_one({'_id': user_id})
-    return data
+    return AFK_USERS.find_one({'_id': user_id})
 
 
 def set_afk(user_id, reason: str="") -> None:
@@ -40,8 +39,7 @@ def set_afk(user_id, reason: str="") -> None:
 
 
 def rm_afk(user_id) -> bool:
-    data = AFK_USERS.find_one_and_delete({'_id': user_id})
-    if data:
+    if data := AFK_USERS.find_one_and_delete({'_id': user_id}):
         AFK_LIST.remove(user_id)
         return True
     return False

@@ -65,8 +65,7 @@ from ubotindo.modules.no_sql.afk_db import is_afk
 @typing_action
 def get_id(update, context):
     args = context.args
-    user_id = extract_user(update.effective_message, args)
-    if user_id:
+    if user_id := extract_user(update.effective_message, args):
         if (
             update.effective_message.reply_to_message
             and update.effective_message.reply_to_message.forward_from
@@ -74,33 +73,25 @@ def get_id(update, context):
             user1 = update.effective_message.reply_to_message.from_user
             user2 = update.effective_message.reply_to_message.forward_from
             update.effective_message.reply_text(
-                "The original sender, {}, has an ID of `{}`.\nThe forwarder, {}, has an ID of `{}`.".format(
-                    escape_markdown(user2.first_name),
-                    user2.id,
-                    escape_markdown(user1.first_name),
-                    user1.id,
-                ),
+                f"The original sender, {escape_markdown(user2.first_name)}, has an ID of `{user2.id}`.\nThe forwarder, {escape_markdown(user1.first_name)}, has an ID of `{user1.id}`.",
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
             user = context.bot.get_chat(user_id)
             update.effective_message.reply_text(
-                "{}'s id is `{}`.".format(
-                    escape_markdown(user.first_name), user.id
-                ),
+                f"{escape_markdown(user.first_name)}'s id is `{user.id}`.",
                 parse_mode=ParseMode.MARKDOWN,
             )
     else:
         chat = update.effective_chat  # type: Optional[Chat]
         if chat.type == "private":
             update.effective_message.reply_text(
-                "Your id is `{}`.".format(chat.id),
-                parse_mode=ParseMode.MARKDOWN,
+                f"Your id is `{chat.id}`.", parse_mode=ParseMode.MARKDOWN
             )
 
         else:
             update.effective_message.reply_text(
-                "This group's id is `{}`.".format(chat.id),
+                f"This group's id is `{chat.id}`.",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
@@ -138,61 +129,42 @@ def info(update, context):
         parse_mode=ParseMode.HTML,
     )
 
-    text = (
-        "<b>USER INFO</b>:"
-        "\n<b>ID:</b> <code>{}</code>"
-        "\n<b>First Name:</b> <code>{}</code>".format(
-            user.id, html.escape(user.first_name)
-        )
-    )
+    text = f"<b>USER INFO</b>:\n<b>ID:</b> <code>{user.id}</code>\n<b>First Name:</b> <code>{html.escape(user.first_name)}</code>"
 
     if user.last_name:
-        text += "\n<b>Last Name:</b> <code>{}</code>".format(
-            html.escape(user.last_name)
-        )
+        text += f"\n<b>Last Name:</b> <code>{html.escape(user.last_name)}</code>"
 
     if user.username:
-        text += "\n<b>Username:</b> @{}".format(html.escape(user.username))
+        text += f"\n<b>Username:</b> @{html.escape(user.username)}"
 
-    text += "\n<b>Permanent user link:</b> {}".format(
-        mention_html(user.id, "link")
-    )
+    text += f'\n<b>Permanent user link:</b> {mention_html(user.id, "link")}'
 
-    text += "\n<b>Number of profile pics:</b> <code>{}</code>".format(
-        context.bot.get_user_profile_photos(user.id).total_count
-    )
+    text += f"\n<b>Number of profile pics:</b> <code>{context.bot.get_user_profile_photos(user.id).total_count}</code>"
 
     if chat.type != "private":
         status = context.bot.get_chat_member(chat.id, user.id).status
         if status:
             _stext = "\n<b>Status:</b> <code>{}</code>"
 
-        afk_st = is_afk(user.id)
-        if afk_st:
+        if afk_st := is_afk(user.id):
             text += _stext.format("Away From Keyboard")
-        else:
-            status = context.bot.get_chat_member(chat.id, user.id).status
-            if status:
-                if status in {"left", "kicked"}:
-                    text += _stext.format("Absent")
-                elif status == "member":
-                    text += _stext.format("Present")
-                elif status in {"administrator", "creator"}:
-                    text += _stext.format("Admin")
+        elif status := context.bot.get_chat_member(chat.id, user.id).status:
+            if status in {"left", "kicked"}:
+                text += _stext.format("Absent")
+            elif status == "member":
+                text += _stext.format("Present")
+            elif status in {"administrator", "creator"}:
+                text += _stext.format("Admin")
 
     try:
-        sw = spamwtc.get_ban(int(user.id))
-        if sw:
+        if sw := spamwtc.get_ban(int(user.id)):
             text += "\n\n<b>This person is banned in Spamwatch!</b>"
             text += f"\n<b>Reason:</b> <pre>{sw.reason}</pre>"
             text += "\nAppeal at @SpamWatchSupport"
-        else:
-            pass
     except BaseException:
         pass  # don't crash if api is down somehow...
 
-    cas_banned = check_cas(user.id)
-    if cas_banned:
+    if cas_banned := check_cas(user.id):
         text += "\n\n<b>This Person is CAS Banned!</b>"
         text += f"\n<b>Reason: </b> <a href='{cas_banned}'>CAS Banned</a>"
         text += "\nAppeal at @cas_discussion"
@@ -224,12 +196,12 @@ def info(update, context):
             "That means I'm not allowed to ban/kick them."
         )
 
-    elif user.id == int(1087968824):
+    elif user.id == 1087968824:
         text += "\n\nThis is anonymous admin in this group. "
 
     try:
         memstatus = chat.get_member(user.id).status
-        if memstatus == "administrator" or memstatus == "creator":
+        if memstatus in ["administrator", "creator"]:
             result = context.bot.get_chat_member(chat.id, user.id)
             if result.custom_title:
                 text += f"\n\nThis user has custom title <b>{result.custom_title}</b> in this chat."
@@ -339,7 +311,7 @@ def markdown_help(update, context):
 def wiki(update, context):
     kueri = re.split(pattern="wiki", string=update.effective_message.text)
     wikipedia.set_lang("en")
-    if len(str(kueri[1])) == 0:
+    if not str(kueri[1]):
         update.effective_message.reply_text("Enter keywords!")
     else:
         try:
@@ -420,12 +392,7 @@ def wall(update, context):
     if not WALL_API:
         return msg.reply_text("This feature currently unavailable!")
     args = context.args
-    query = " ".join(args)
-    if not query:
-        msg.reply_text("Please enter a query!")
-        return
-    else:
-        caption = query
+    if query := " ".join(args):
         term = query.replace(" ", "%20")
         json_rep = r.get(
             f"https://wall.alphacoders.com/api2.0/get.php?auth={WALL_API}&method=search&term={term}"
@@ -433,34 +400,37 @@ def wall(update, context):
         if not json_rep.get("success"):
             msg.reply_text("An error occurred!")
 
+        elif wallpapers := json_rep.get("wallpapers"):
+            index = randint(0, len(wallpapers) - 1)  # Choose random index
+            wallpaper = wallpapers[index]
+            wallpaper = wallpaper.get("url_image")
+            wallpaper = wallpaper.replace("\\", "")
+            caption = query
+            try:
+                context.bot.send_photo(
+                    chat_id,
+                    photo=wallpaper,
+                    caption="Preview",
+                    reply_to_message_id=msg_id,
+                    timeout=60,
+                )
+                context.bot.send_document(
+                    chat_id,
+                    document=wallpaper,
+                    filename="wallpaper",
+                    caption=caption,
+                    reply_to_message_id=msg_id,
+                    timeout=60,
+                )
+            except BadRequest as err:
+                msg.reply_text(err.message)
+
         else:
-            wallpapers = json_rep.get("wallpapers")
-            if not wallpapers:
-                msg.reply_text("No results found! Refine your search.")
-                return
-            else:
-                index = randint(0, len(wallpapers) - 1)  # Choose random index
-                wallpaper = wallpapers[index]
-                wallpaper = wallpaper.get("url_image")
-                wallpaper = wallpaper.replace("\\", "")
-                try:
-                    context.bot.send_photo(
-                        chat_id,
-                        photo=wallpaper,
-                        caption="Preview",
-                        reply_to_message_id=msg_id,
-                        timeout=60,
-                    )
-                    context.bot.send_document(
-                        chat_id,
-                        document=wallpaper,
-                        filename="wallpaper",
-                        caption=caption,
-                        reply_to_message_id=msg_id,
-                        timeout=60,
-                    )
-                except BadRequest as err:
-                    msg.reply_text(err.message)
+            msg.reply_text("No results found! Refine your search.")
+            return
+    else:
+        msg.reply_text("Please enter a query!")
+        return
 
 
 @typing_action
@@ -517,13 +487,13 @@ def stats(update, context):
 @typing_action
 def covid(update, context):
     message = update.effective_message
-    country = str(message.text[len(f"/covid ") :])
+    country = str(message.text[len("/covid "):])
     data = Covid(source="worldometers")
 
-    if country == "":
+    if not country:
         country = "world"
         link = "https://www.worldometers.info/coronavirus"
-    elif country.lower() in ["south korea", "korea"]:
+    elif country.lower() in {"south korea", "korea"}:
         country = "s. korea"
         link = "https://www.worldometers.info/coronavirus/country/south-korea"
     else:

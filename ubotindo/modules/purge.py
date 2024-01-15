@@ -16,7 +16,6 @@ from ubotindo.modules.log_channel import loggable
 @user_admin
 @loggable
 def purge(update, context):
-    args = context.args
     msg = update.effective_message  # type: Optional[Message]
     if msg.reply_to_message:
         user = update.effective_user  # type: Optional[User]
@@ -24,6 +23,7 @@ def purge(update, context):
         if user_can_delete(chat, user, context.bot.id) == False:
            msg.reply_text("You don't have enough rights to delete message!")
            return ""
+        args = context.args
         if can_delete(chat, context.bot.id):
             message_id = msg.reply_to_message.message_id
             delete_to = msg.message_id - 1
@@ -63,12 +63,7 @@ def purge(update, context):
             except BadRequest:
                 pass
 
-            return "<b>{}:</b>" \
-                   "\n#PURGE" \
-                   "\n<b>Admin:</b> {}" \
-                   "\nPurged <code>{}</code> messages.".format(html.escape(chat.title),
-                                                               mention_html(user.id, user.first_name),
-                                                               delete_to - message_id)
+            return f"<b>{html.escape(chat.title)}:</b>\n#PURGE\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nPurged <code>{delete_to - message_id}</code> messages."
 
     else:
         msg.reply_text("Reply to a message to select where to start purging from.")
@@ -89,11 +84,7 @@ def del_message(update, context) -> str:
         if can_delete(chat, context.bot.id):
             update.effective_message.reply_to_message.delete()
             update.effective_message.delete()
-            return "<b>{}:</b>" \
-                   "\n#DEL" \
-                   "\n<b>Admin:</b> {}" \
-                   "\nMessage deleted.".format(html.escape(chat.title),
-                                               mention_html(user.id, user.first_name))
+            return f"<b>{html.escape(chat.title)}:</b>\n#DEL\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nMessage deleted."
     else:
         update.effective_message.reply_text("Whadya want to delete?")
 

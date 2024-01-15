@@ -62,7 +62,7 @@ def magisk(update, context):
         )
 
     del_msg = update.message.reply_text(
-        "*Latest Magisk Releases:*\n{}".format(releases),
+        f"*Latest Magisk Releases:*\n{releases}",
         parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=True,
     )
@@ -71,9 +71,10 @@ def magisk(update, context):
         del_msg.delete()
         update.effective_message.delete()
     except BadRequest as err:
-        if (err.message == "Message to delete not found") or (
-            err.message == "Message can't be deleted"
-        ):
+        if err.message in [
+            "Message to delete not found",
+            "Message can't be deleted",
+        ]:
             return
 
 
@@ -85,7 +86,7 @@ def device(update, context):
             "No codename provided, write a codename for fetching informations."
         )
         del_msg = update.effective_message.reply_text(
-            "{}".format(reply),
+            f"{reply}",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -94,9 +95,10 @@ def device(update, context):
             del_msg.delete()
             update.effective_message.delete()
         except BadRequest as err:
-            if (err.message == "Message to delete not found") or (
-                err.message == "Message can't be deleted"
-            ):
+            if err.message in [
+                "Message to delete not found",
+                "Message can't be deleted",
+            ]:
                 return
     device = " ".join(args)
     db = get(DEVICES_DATA).json()
@@ -115,7 +117,7 @@ def device(update, context):
     except KeyError:
         reply = f"Couldn't find info about {device}!\n"
         del_msg = update.effective_message.reply_text(
-            "{}".format(reply),
+            f"{reply}",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -124,14 +126,13 @@ def device(update, context):
             del_msg.delete()
             update.effective_message.delete()
         except BadRequest as err:
-            if (err.message == "Message to delete not found") or (
-                err.message == "Message can't be deleted"
-            ):
+            if err.message in [
+                "Message to delete not found",
+                "Message can't be deleted",
+            ]:
                 return
     update.message.reply_text(
-        "{}".format(reply),
-        parse_mode=ParseMode.HTML,
-        disable_web_page_preview=True,
+        f"{reply}", parse_mode=ParseMode.HTML, disable_web_page_preview=True
     )
 
 
@@ -143,7 +144,7 @@ def twrp(update, context):
             "No codename provided, write a codename for fetching informations."
         )
         del_msg = update.effective_message.reply_text(
-            "{}".format(reply),
+            f"{reply}",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -160,7 +161,7 @@ def twrp(update, context):
     if url.status_code == 404:
         reply = f"Couldn't find twrp downloads for {device}!\n"
         del_msg = update.effective_message.reply_text(
-            "{}".format(reply),
+            f"{reply}",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -169,9 +170,10 @@ def twrp(update, context):
             del_msg.delete()
             update.effective_message.delete()
         except BadRequest as err:
-            if (err.message == "Message to delete not found") or (
-                err.message == "Message can't be deleted"
-            ):
+            if err.message in [
+                "Message to delete not found",
+                "Message can't be deleted",
+            ]:
                 return
     else:
         reply = f"*Latest Official TWRP for {device}*\n"
@@ -198,7 +200,7 @@ def twrp(update, context):
             reply += f"[{dl_file}]({dl_link}) - {size}\n"
 
         update.message.reply_text(
-            "{}".format(reply),
+            f"{reply}",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
@@ -214,7 +216,7 @@ def los(update, context) -> str:
     except Exception:
         device = ""
 
-    if device == "":
+    if not device:
         reply_text = (
             "*Please Type Your Device Codename*\nExample : `/los lavender`"
         )
@@ -269,7 +271,7 @@ def gsi(update, context):
     update.effective_chat
 
     usr = get(
-        f"https://api.github.com/repos/phhusson/treble_experimentations/releases/latest"
+        "https://api.github.com/repos/phhusson/treble_experimentations/releases/latest"
     ).json()
     reply_text = "*Gsi'S Latest release*\n"
     for i in range(len(usr)):
@@ -292,7 +294,7 @@ def bootleg(update, context) -> str:
     except Exception:
         codename = ""
 
-    if codename == "":
+    if not codename:
         message.reply_text(
             "*Please Type Your Device Codename*\nExample : `/bootleg lavender`",
             parse_mode=ParseMode.MARKDOWN,

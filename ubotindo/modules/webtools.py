@@ -40,8 +40,7 @@ from ubotindo.modules.helper_funcs.filters import CustomFilters
 @typing_action
 def leavechat(update, context):
     bot = context.bot
-    args = context.args
-    if args:
+    if args := context.args:
         chat_id = str(args[0])
         del args[0]
         try:
@@ -60,9 +59,7 @@ def ping(update, context):
     message = msg.reply_text("Pinging...")
     end_time = time.time()
     ping_time = round((end_time - start_time) * 1000, 3)
-    message.edit_text(
-        "*Pong!!!*\n`{}ms`".format(ping_time), parse_mode=ParseMode.MARKDOWN
-    )
+    message.edit_text(f"*Pong!!!*\n`{ping_time}ms`", parse_mode=ParseMode.MARKDOWN)
 
 
 @typing_action
@@ -104,25 +101,25 @@ def system_status(update, context):
         "%Y-%m-%d %H:%M:%S"
     )
     status = "<b>======[ SYSTEM INFO ]======</b>\n\n"
-    status += "<b>System uptime:</b> <code>" + str(uptime) + "</code>\n"
+    status += f"<b>System uptime:</b> <code>{str(uptime)}" + "</code>\n"
 
     uname = platform.uname()
-    status += "<b>System:</b> <code>" + str(uname.system) + "</code>\n"
-    status += "<b>Node name:</b> <code>" + str(uname.node) + "</code>\n"
-    status += "<b>Release:</b> <code>" + str(uname.release) + "</code>\n"
-    status += "<b>Version:</b> <code>" + str(uname.version) + "</code>\n"
-    status += "<b>Machine:</b> <code>" + str(uname.machine) + "</code>\n"
-    status += "<b>Processor:</b> <code>" + str(uname.processor) + "</code>\n\n"
+    status += f"<b>System:</b> <code>{str(uname.system)}" + "</code>\n"
+    status += f"<b>Node name:</b> <code>{str(uname.node)}" + "</code>\n"
+    status += f"<b>Release:</b> <code>{str(uname.release)}" + "</code>\n"
+    status += f"<b>Version:</b> <code>{str(uname.version)}" + "</code>\n"
+    status += f"<b>Machine:</b> <code>{str(uname.machine)}" + "</code>\n"
+    status += f"<b>Processor:</b> <code>{str(uname.processor)}" + "</code>\n\n"
 
     mem = virtual_memory()
     cpu = cpu_percent()
     disk = disk_usage("/")
-    status += "<b>CPU usage:</b> <code>" + str(cpu) + " %</code>\n"
-    status += "<b>Ram usage:</b> <code>" + str(mem[2]) + " %</code>\n"
-    status += "<b>Storage used:</b> <code>" + str(disk[3]) + " %</code>\n\n"
-    status += "<b>Python version:</b> <code>" + python_version() + "</code>\n"
-    status += "<b>Library version:</b> <code>" + str(__version__) + "</code>\n"
-    status += "<b>Spamwatch API:</b> <code>" + str(__sw__) + "</code>\n"
+    status += f"<b>CPU usage:</b> <code>{str(cpu)}" + " %</code>\n"
+    status += f"<b>Ram usage:</b> <code>{str(mem[2])}" + " %</code>\n"
+    status += f"<b>Storage used:</b> <code>{str(disk[3])}" + " %</code>\n\n"
+    status += f"<b>Python version:</b> <code>{python_version()}" + "</code>\n"
+    status += f"<b>Library version:</b> <code>{str(__version__)}" + "</code>\n"
+    status += f"<b>Spamwatch API:</b> <code>{str(__sw__)}" + "</code>\n"
     context.bot.sendMessage(
         update.effective_chat.id, status, parse_mode=ParseMode.HTML
     )

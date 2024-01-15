@@ -117,8 +117,6 @@ def restr_members(
     previews=False,
 ):
     for mem in members:
-        if mem.user in SUDO_USERS or mem.user in DEV_USERS:
-            pass
         try:
             bot.restrict_chat_member(
                 chat_id,
