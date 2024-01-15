@@ -40,10 +40,9 @@ def add_to_blacklist(chat_id, trigger):
 
 
 def rm_from_blacklist(chat_id, trigger) -> bool:
-    data = BL.find_one_and_delete(
+    if data := BL.find_one_and_delete(
         {'chat_id': chat_id, 'trigger': trigger}
-        )
-    if data:
+    ):
         if trigger in CHAT_BLACKLISTS.get(str(chat_id), set()):
             CHAT_BLACKLISTS.get(str(chat_id), set()).remove(trigger)
         return True
@@ -92,8 +91,7 @@ def set_blacklist_strength(chat_id, blacklist_type, value):
 
 
 def get_blacklist_setting(chat_id) -> [int, str]:
-    setting = CHAT_SETTINGS_BLACKLISTS.get(str(chat_id))
-    if setting:
+    if setting := CHAT_SETTINGS_BLACKLISTS.get(str(chat_id)):
         return setting["blacklist_type"], setting["value"]
     else:
         return 1, "0"

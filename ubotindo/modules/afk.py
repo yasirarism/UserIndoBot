@@ -75,8 +75,7 @@ def no_longer_afk(update, context):
     if not user:  # ignore channels
         return
 
-    res = afk_db.rm_afk(user.id)
-    if res:
+    if res := afk_db.rm_afk(user.id):
         if message.new_chat_members:  # dont say msg
             return
         firstname = update.effective_user.first_name
@@ -123,32 +122,27 @@ def reply_afk(update, context):
                     return
                 chk_users.append(user_id)
 
-            if ent.type == MessageEntity.MENTION:
-                user_id = get_user_id(
-                    message.text[ent.offset: ent.offset + ent.length]
-                )
-                if not user_id:
-                    # Should never happen, since for a user to become AFK they
-                    # must have spoken. Maybe changed username?
-                    return
-
-                if user_id in chk_users:
-                    return
-                chk_users.append(user_id)
-
-                try:
-                    chat = bot.get_chat(user_id)
-                except BadRequest:
-                    print(
-                        "Error: Could not fetch userid {} for AFK module".format(
-                            user_id
-                        )
-                    )
-                    return
-                fst_name = chat.first_name
-
-            else:
+            if ent.type != MessageEntity.MENTION:
                 return
+
+            user_id = get_user_id(
+                message.text[ent.offset: ent.offset + ent.length]
+            )
+            if not user_id:
+                # Should never happen, since for a user to become AFK they
+                # must have spoken. Maybe changed username?
+                return
+
+            if user_id in chk_users:
+                return
+            chk_users.append(user_id)
+
+            try:
+                chat = bot.get_chat(user_id)
+            except BadRequest:
+                print(f"Error: Could not fetch userid {user_id} for AFK module")
+                return
+            fst_name = chat.first_name
 
             check_afk(update, context, user_id, fst_name, userc_id)
 
@@ -159,28 +153,26 @@ def reply_afk(update, context):
 
 
 def check_afk(update, context, user_id, fst_name, userc_id):
-    if afk_db.is_afk(user_id):
-        user = afk_db.check_afk_status(user_id)
-        if user is None:
-            return  # sanity check
-        if not user["reason"]:
-            if int(userc_id) == int(user_id):
-                return
-            res = "{} is afk".format(fst_name)
-            replafk = update.effective_message.reply_text(res)
-        else:
-            if int(userc_id) == int(user_id):
-                return
-            res = "<b>{}</b> is away from keyboard! says it's because of <b>Reason:</b> <code>{}</code>".format(
-                fst_name, user["reason"])
-            replafk = update.effective_message.reply_text(
-                res, parse_mode="html"
-            )
-        sleep(10)
-        try:
-            replafk.delete()
-        except BadRequest:
-            return
+    if not afk_db.is_afk(user_id):
+        return
+    user = afk_db.check_afk_status(user_id)
+    if user is None:
+        return  # sanity check
+    if int(userc_id) == int(user_id):
+        return
+    if not user["reason"]:
+        res = f"{fst_name} is afk"
+        replafk = update.effective_message.reply_text(res)
+    else:
+        res = f"""<b>{fst_name}</b> is away from keyboard! says it's because of <b>Reason:</b> <code>{user["reason"]}</code>"""
+        replafk = update.effective_message.reply_text(
+            res, parse_mode="html"
+        )
+    sleep(10)
+    try:
+        replafk.delete()
+    except BadRequest:
+        return
 
 
 def __gdpr__(user_id):

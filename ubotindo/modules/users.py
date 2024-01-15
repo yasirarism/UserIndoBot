@@ -53,9 +53,7 @@ def get_user_id(username):
                     return userdat.id
 
             except BadRequest as excp:
-                if excp.message == "Chat not found":
-                    pass
-                else:
+                if excp.message != "Chat not found":
                     LOGGER.exception("Error extracting user ID")
 
     return None
@@ -79,8 +77,7 @@ def broadcast(update, context):
                 )
 
         update.effective_message.reply_text(
-            "Broadcast complete. {} groups failed to receive the message, probably "
-            "due to being kicked.".format(failed)
+            f"Broadcast complete. {failed} groups failed to receive the message, probably due to being kicked."
         )
 
 
@@ -108,7 +105,7 @@ def chats(update, context):
     all_chats = users_db.get_all_chats() or []
     chatfile = "List of chats.\n"
     for chat in all_chats:
-        chatfile += "{} - ({})\n".format(chat["chat_name"], chat["chat_id"])
+        chatfile += f'{chat["chat_name"]} - ({chat["chat_id"]})\n'
 
     with BytesIO(str.encode(chatfile)) as output:
         output.name = "chatlist.txt"
@@ -136,15 +133,11 @@ def __user_info__(user_id):
     if user_id == dispatcher.bot.id:
         return """I've seen them in... Wow. Are they stalking me? They're in all the same places I am... oh. It's me."""
     num_chats = users_db.get_user_num_chats(user_id)
-    return """I've seen them in <code>{}</code> chats in total.""".format(
-        num_chats
-    )
+    return f"""I've seen them in <code>{num_chats}</code> chats in total."""
 
 
 def __stats__():
-    return "× {} users, across {} chats".format(
-        users_db.num_users(), users_db.num_chats()
-    )
+    return f"× {users_db.num_users()} users, across {users_db.num_chats()} chats"
 
 
 def __migrate__(old_chat_id, new_chat_id):

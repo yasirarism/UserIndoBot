@@ -92,9 +92,9 @@ UNGBAN_ERRORS = {
 
 @typing_action
 def gban(update, context):
-    message = update.effective_message
     chat = update.effective_chat
     args = context.args
+    message = update.effective_message
     user_id, reason = extract_user_and_text(message, args)
 
     if not user_id:
@@ -169,29 +169,12 @@ def gban(update, context):
 
         context.bot.sendMessage(
             GBAN_LOGS,
-            "<b>Global Ban Reason Update</b>"
-            "\n<b>Sudo Admin:</b> {}"
-            "\n<b>User:</b> {}"
-            "\n<b>ID:</b> <code>{}</code>"
-            "\n<b>Previous Reason:</b> {}"
-            "\n<b>New Reason:</b> {}".format(
-                mention_html(banner.id, banner.first_name),
-                mention_html(
-                    user_chat.id, user_chat.first_name or "Deleted Account"
-                ),
-                user_chat.id,
-                old_reason,
-                reason,
-            ),
+            f'<b>Global Ban Reason Update</b>\n<b>Sudo Admin:</b> {mention_html(banner.id, banner.first_name)}\n<b>User:</b> {mention_html(user_chat.id, user_chat.first_name or "Deleted Account")}\n<b>ID:</b> <code>{user_chat.id}</code>\n<b>Previous Reason:</b> {old_reason}\n<b>New Reason:</b> {reason}',
             parse_mode=ParseMode.HTML,
         )
 
         message.reply_text(
-            "This user is already gbanned, for the following reason:\n"
-            "<code>{}</code>\n"
-            "I've gone and updated it with your new reason!".format(
-                html.escape(old_reason)
-            ),
+            f"This user is already gbanned, for the following reason:\n<code>{html.escape(old_reason)}</code>\nI've gone and updated it with your new reason!",
             parse_mode=ParseMode.HTML,
         )
     else:
@@ -204,27 +187,14 @@ def gban(update, context):
 
         context.bot.sendMessage(
             GBAN_LOGS,
-            "<b>New Global Ban</b>"
-            "\n#GBAN"
-            "\n<b>Status:</b> <code>Enforcing</code>"
-            "\n<b>Sudo Admin:</b> {}"
-            "\n<b>User:</b> {}"
-            "\n<b>ID:</b> <code>{}</code>"
-            "\n<b>Reason:</b> {}".format(
-                mention_html(banner.id, banner.first_name),
-                mention_html(user_chat.id, user_chat.first_name),
-                user_chat.id,
-                reason,
-            ),
+            f"<b>New Global Ban</b>\n#GBAN\n<b>Status:</b> <code>Enforcing</code>\n<b>Sudo Admin:</b> {mention_html(banner.id, banner.first_name)}\n<b>User:</b> {mention_html(user_chat.id, user_chat.first_name)}\n<b>ID:</b> <code>{user_chat.id}</code>\n<b>Reason:</b> {reason}",
             parse_mode=ParseMode.HTML,
         )
 
         try:
             context.bot.kick_chat_member(chat.id, user_chat.id)
         except BadRequest as excp:
-            if excp.message in GBAN_ERRORS:
-                pass
-
+            pass
         gban_db.gban_user(user_id, user_chat.username or user_chat.first_name, reason)
 
 
@@ -249,21 +219,12 @@ def ungban(update, context):
     banner = update.effective_user
 
     message.reply_text(
-        "I'll give {} a second chance, globally.".format(user_chat.first_name)
+        f"I'll give {user_chat.first_name} a second chance, globally."
     )
 
     context.bot.sendMessage(
         GBAN_LOGS,
-        "<b>Regression of Global Ban</b>"
-        "\n#UNGBAN"
-        "\n<b>Status:</b> <code>Ceased</code>"
-        "\n<b>Sudo Admin:</b> {}"
-        "\n<b>User:</b> {}"
-        "\n<b>ID:</b> <code>{}</code>".format(
-            mention_html(banner.id, banner.first_name),
-            mention_html(user_chat.id, user_chat.first_name),
-            user_chat.id,
-        ),
+        f"<b>Regression of Global Ban</b>\n#UNGBAN\n<b>Status:</b> <code>Ceased</code>\n<b>Sudo Admin:</b> {mention_html(banner.id, banner.first_name)}\n<b>User:</b> {mention_html(user_chat.id, user_chat.first_name)}\n<b>ID:</b> <code>{user_chat.id}</code>",
         parse_mode=ParseMode.HTML,
     )
 
@@ -281,16 +242,9 @@ def ungban(update, context):
                 context.bot.unban_chat_member(chat_id, user_id)
 
         except BadRequest as excp:
-            if excp.message in UNGBAN_ERRORS:
-                pass
-            else:
-                message.reply_text(
-                    "Could not un-gban due to: {}".format(excp.message)
-                )
-                context.bot.send_message(
-                    OWNER_ID,
-                    "Could not un-gban due to: {}".format(excp.message),
-                )
+            if excp.message not in UNGBAN_ERRORS:
+                message.reply_text(f"Could not un-gban due to: {excp.message}")
+                context.bot.send_message(OWNER_ID, f"Could not un-gban due to: {excp.message}")
                 return
         except TelegramError:
             pass
@@ -311,9 +265,9 @@ def gbanlist(update, context):
 
     banfile = "List of retards.\n"
     for user in banned_users:
-        banfile += "[x] {} - {}\n".format(user["name"], user["_id"])
+        banfile += f'[x] {user["name"]} - {user["_id"]}\n'
         if user["reason"]:
-            banfile += "Reason: {}\n".format(user["reason"])
+            banfile += f'Reason: {user["reason"]}\n'
 
     with BytesIO(str.encode(banfile)) as output:
         output.name = "gbanlist.txt"
@@ -325,17 +279,14 @@ def gbanlist(update, context):
 
 
 def check_cas(user_id):
-    cas_url = "https://api.cas.chat/check?user_id={}".format(user_id)
+    cas_url = f"https://api.cas.chat/check?user_id={user_id}"
     try:
         r = get(cas_url, timeout=3)
         data = r.json()
     except BaseException:
         # LOGGER.info(f"CAS check failed for {user_id}")
         return False
-    if data and data["ok"]:
-        return "https://cas.chat/query?u={}".format(user_id)
-    else:
-        return False
+    return f"https://cas.chat/query?u={user_id}" if data and data["ok"] else False
 
 
 def check_and_ban(update, user_id, should_message=True):
@@ -432,16 +383,12 @@ def gbanstat(update, context):
             )
     else:
         update.effective_message.reply_text(
-            "Give me some arguments to choose a setting! on/off, yes/no!\n\n"
-            "Your current setting is: {}\n"
-            "When True, Any Spam Shield that happen will also happen in your group. "
-            "When False, they won't, leaving you at the possible mercy of "
-            "spammers.".format(gban_db.does_chat_gban(update.effective_chat.id))
+            f"Give me some arguments to choose a setting! on/off, yes/no!\n\nYour current setting is: {gban_db.does_chat_gban(update.effective_chat.id)}\nWhen True, Any Spam Shield that happen will also happen in your group. When False, they won't, leaving you at the possible mercy of spammers."
         )
 
 
 def __stats__():
-    return "× {} gbanned users.".format(gban_db.num_gbanned_users())
+    return f"× {gban_db.num_gbanned_users()} gbanned users."
 
 
 def __user_info__(user_id):
@@ -459,12 +406,12 @@ def __user_info__(user_id):
 
     if cas_banned or spmban or is_gbanned:
         text = text.format("Yes")
-        if is_gbanned:
-            user = gban_db.get_gbanned_user(user_id)
-            text += "\n<b>Reason:</b> {}".format(html.escape(user["reason"]))
-            text += "\nAppeal at @botspamgroup if you think it's invalid."
     else:
         text = text.format("No")
+    if is_gbanned:
+        user = gban_db.get_gbanned_user(user_id)
+        text += f'\n<b>Reason:</b> {html.escape(user["reason"])}'
+        text += "\nAppeal at @botspamgroup if you think it's invalid."
     return text
 
 
@@ -473,9 +420,7 @@ def __migrate__(old_chat_id, new_chat_id):
 
 
 def __chat_settings__(chat_id, user_id):
-    return "This chat is enforcing *gbans*: `{}`.".format(
-        gban_db.does_chat_gban(chat_id)
-    )
+    return f"This chat is enforcing *gbans*: `{gban_db.does_chat_gban(chat_id)}`."
 
 
 __help__ = """

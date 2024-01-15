@@ -35,24 +35,20 @@ USER_BIO = get_collection("USER_BIO")
 def about_me(update, context):
     message = update.effective_message  # type: Optional[Message]
     args = context.args
-    user_id = extract_user(message, args)
-
-    if user_id:
+    if user_id := extract_user(message, args):
         user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
-    info = USER_INFO.find_one({'_id': user.id})
-
-    if info:
+    if info := USER_INFO.find_one({'_id': user.id}):
         update.effective_message.reply_text(
-            "*{}*:\n{}".format(user.first_name, escape_markdown(info["info"])),
+            f'*{user.first_name}*:\n{escape_markdown(info["info"])}',
             parse_mode=ParseMode.MARKDOWN,
         )
     elif message.reply_to_message:
         username = message.reply_to_message.from_user.first_name
         update.effective_message.reply_text(
-            username + "Information about him is currently unavailable !"
+            f"{username}Information about him is currently unavailable !"
         )
     else:
         update.effective_message.reply_text(
@@ -83,9 +79,7 @@ def set_about_me(update, context):
             message.reply_text("Your bio has been saved successfully")
         else:
             message.reply_text(
-                " About You{} To be confined to letters ".format(
-                    MAX_MESSAGE_LENGTH // 4, len(info[1])
-                )
+                f" About You{MAX_MESSAGE_LENGTH // 4} To be confined to letters "
             )
 
 
@@ -94,23 +88,20 @@ def about_bio(update, context):
     message = update.effective_message  # type: Optional[Message]
     args = context.args
 
-    user_id = extract_user(message, args)
-    if user_id:
+    if user_id := extract_user(message, args):
         user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
-    info = USER_BIO.find_one({'_id': user.id})
-
-    if info:
+    if info := USER_BIO.find_one({'_id': user.id}):
         update.effective_message.reply_text(
-            "*{}*:\n{}".format(user.first_name, escape_markdown(info["bio"])),
+            f'*{user.first_name}*:\n{escape_markdown(info["bio"])}',
             parse_mode=ParseMode.MARKDOWN,
         )
     elif message.reply_to_message:
         username = user.first_name
         update.effective_message.reply_text(
-            "{} No details about him have been saved yet !".format(username)
+            f"{username} No details about him have been saved yet !"
         )
     else:
         update.effective_message.reply_text(
@@ -147,15 +138,11 @@ def set_about_bio(update, context):
                     {"$set": {'bio': bio[1]}},
                     upsert=True)
                 message.reply_text(
-                    "{} bio has been successfully saved!".format(
-                        repl_message.from_user.first_name
-                    )
+                    f"{repl_message.from_user.first_name} bio has been successfully saved!"
                 )
             else:
                 message.reply_text(
-                    "About you {} Must stick to the letter! The number of characters you have just tried {} hm .".format(
-                        MAX_MESSAGE_LENGTH // 4, len(bio[1])
-                    )
+                    f"About you {MAX_MESSAGE_LENGTH // 4} Must stick to the letter! The number of characters you have just tried {len(bio[1])} hm ."
                 )
     else:
         message.reply_text(
@@ -176,9 +163,9 @@ def __user_info__(user_id):
             me=me, bio=bio
         )
     elif bdata:
-        return "<b>What others say:</b>\n{}\n".format(bio)
+        return f"<b>What others say:</b>\n{bio}\n"
     elif idata:
-        return "<b>About user:</b>\n{}".format(me)
+        return f"<b>About user:</b>\n{me}"
     else:
         return ""
 

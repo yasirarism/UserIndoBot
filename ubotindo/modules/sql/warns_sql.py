@@ -45,9 +45,7 @@ class Warns(BASE):
         self.reasons = []
 
     def __repr__(self):
-        return "<{} warns for {} in {} for reasons {}>".format(
-            self.num_warns, self.user_id, self.chat_id, self.reasons
-        )
+        return f"<{self.num_warns} warns for {self.user_id} in {self.chat_id} for reasons {self.reasons}>"
 
 
 class WarnFilters(BASE):
@@ -62,10 +60,10 @@ class WarnFilters(BASE):
         self.reply = reply
 
     def __repr__(self):
-        return "<Permissions for %s>" % self.chat_id
+        return f"<Permissions for {self.chat_id}>"
 
     def __eq__(self, other):
-        return bool(
+        return (
             isinstance(other, WarnFilters)
             and self.chat_id == other.chat_id
             and self.keyword == other.keyword
@@ -84,9 +82,7 @@ class WarnSettings(BASE):
         self.soft_warn = soft_warn
 
     def __repr__(self):
-        return "<{} has {} possible warns.>".format(
-            self.chat_id, self.warn_limit
-        )
+        return f"<{self.chat_id} has {self.warn_limit} possible warns.>"
 
 
 Warns.__table__.create(checkfirst=True)
@@ -133,15 +129,12 @@ def remove_warn(user_id, chat_id):
     with WARN_INSERTION_LOCK:
         removed = False
         warned_user = SESSION.query(Warns).get((user_id, str(chat_id)))
-        temp_reason = []
-
         if warned_user and warned_user.num_warns > 0:
             warned_user.num_warns -= 1
 
             if warned_user and warned_user.reasons is not None:
                 len(warned_user.reasons)
-                for reason in warned_user.reasons:
-                    temp_reason.append(reason)
+                temp_reason = list(warned_user.reasons)
                 del temp_reason[-1]
                 warned_user.reasons = temp_reason
 
@@ -155,8 +148,7 @@ def remove_warn(user_id, chat_id):
 
 def reset_warns(user_id, chat_id):
     with WARN_INSERTION_LOCK:
-        warned_user = SESSION.query(Warns).get((user_id, str(chat_id)))
-        if warned_user:
+        if warned_user := SESSION.query(Warns).get((user_id, str(chat_id))):
             warned_user.num_warns = 0
             warned_user.reasons = []
 
@@ -168,11 +160,7 @@ def reset_warns(user_id, chat_id):
 def get_warns(user_id, chat_id):
     try:
         user = SESSION.query(Warns).get((user_id, str(chat_id)))
-        if not user:
-            return None
-        reasons = user.reasons
-        num = user.num_warns
-        return num, reasons
+        return None if not user else (user.num_warns, user.reasons)
     finally:
         SESSION.close()
 
@@ -193,8 +181,9 @@ def add_warn_filter(chat_id, keyword, reply):
 
 def remove_warn_filter(chat_id, keyword):
     with WARN_FILTER_INSERTION_LOCK:
-        warn_filt = SESSION.query(WarnFilters).get((str(chat_id), keyword))
-        if warn_filt:
+        if warn_filt := SESSION.query(WarnFilters).get(
+            (str(chat_id), keyword)
+        ):
             if keyword in WARN_FILTERS.get(str(chat_id), []):  # sanity check
                 WARN_FILTERS.get(str(chat_id), []).remove(keyword)
 
@@ -253,8 +242,7 @@ def set_warn_strength(chat_id, soft_warn):
 
 def get_warn_setting(chat_id):
     try:
-        setting = SESSION.query(WarnSettings).get(str(chat_id))
-        if setting:
+        if setting := SESSION.query(WarnSettings).get(str(chat_id)):
             return setting.warn_limit, setting.soft_warn
         else:
             return 3, False
@@ -344,8 +332,7 @@ def migrate_chat(old_chat_id, new_chat_id):
         for filt in chat_filters:
             filt.chat_id = str(new_chat_id)
         SESSION.commit()
-        old_filt = WARN_FILTERS.get(str(old_chat_id))
-        if old_filt:
+        if old_filt := WARN_FILTERS.get(str(old_chat_id)):
             WARN_FILTERS[str(new_chat_id)] = old_filt
             del WARN_FILTERS[str(old_chat_id)]
 
